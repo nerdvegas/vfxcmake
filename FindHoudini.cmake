@@ -1,6 +1,7 @@
 #
 # In:
 #  HOUDINI_ROOT (alternatively, make sure 'houdini' is on $PATH)
+#  HOUDINI_DSO_TAG
 #
 # Out:
 #  HOUDINI_FOUND
@@ -44,7 +45,10 @@ else(HOUDINI_BINARY STREQUAL "HOUDINI_BINARY-NOTFOUND" )
     # general definitions
     list(APPEND HOUDINI_DEFINITIONS -DVERSION="$ENV{HOUDINI_VERSION}")
     list(APPEND HOUDINI_DEFINITIONS -DMAKING_DSO )
-    list(APPEND HOUDINI_DEFINITIONS -DUT_DSO_TAGINFO="vfxgal" )
+    if(NOT HOUDINI_DSO_TAG)
+        set(HOUDINI_DSO_TAG "unknown")
+    endif(NOT HOUDINI_DSO_TAG)    
+    list(APPEND HOUDINI_DEFINITIONS -DUT_DSO_TAGINFO="${HOUDINI_DSO_TAG}" )
     
     GetCXXCompiler(_HOU)
     set(_HOU_NEED_SPEC_STORAGE TRUE)
@@ -99,16 +103,16 @@ endif( Houdini_FIND_REQUIRED AND NOT HOUDINI_FOUND )
 #
 # Copyright 2012, Allan Johns
 #
-# vfxgal is free software: you can redistribute it and/or modify
+# vfxcmake is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# vfxgal is distributed in the hope that it will be useful,
+# vfxcmake is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with vfxgal.  If not, see <http://www.gnu.org/licenses/>.
+# along with vfxcmake.  If not, see <http://www.gnu.org/licenses/>.
 #
