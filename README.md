@@ -1,9 +1,9 @@
 vfxcmake
 ========
 
-Cmake Find modules for common vfx software, and general Cmake utility code
+Cmake Find modules for common vfx software, and general Cmake utility code, licensed under LGPL.
 
-Please fork this project, improve it and add new applications!
+Please fork this project, improve it, and add new applications!
 
 
 Maya Example
