@@ -135,31 +135,33 @@ FOREACH(version ${_maya_TEST_VERSIONS})
   ENDIF()
 ENDFOREACH(version)
 
-# search for maya on the within the MAYA_LOCATION and PATH env vars and test paths
+# search for maya within the MAYA_LOCATION and PATH env vars and test paths
 FIND_PROGRAM(MAYA_EXECUTABLE maya
   PATHS
-    $ENV{MAYA_LOCATION}/bin
-    ${_maya_TEST_PATHS}/bin
+    $ENV{MAYA_LOCATION}
+    ${_maya_TEST_PATHS}
+  PATH_SUFFIXES bin
   DOC "Maya's executable path"
 )
 
 IF(MAYA_EXECUTABLE)
   # TODO: use GET_FILENAME_COMPONENT here
-  STRING(REGEX REPLACE "/bin/maya" "" MAYA_LOCATION "${MAYA_EXECUTABLE}")
+  STRING(REGEX REPLACE "/bin/maya.*" "" MAYA_LOCATION "${MAYA_EXECUTABLE}")
 
   STRING(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
-
+    
   IF(Maya_FIND_VERSION)
-    # test that we've found a vaild version
+    # test that we've found a valid version
     LIST(FIND _maya_TEST_VERSIONS ${MAYA_VERSION} _maya_FOUND_INDEX)
     IF(${_maya_FOUND_INDEX} GREATER -1)
       MESSAGE(STATUS "Found Maya version ${MAYA_VERSION}, but requested at least ${Maya_FIND_VERSION}. Re-searching without environment variables...")
       SET(MAYA_LOCATION NOTFOUND)
       # search again, but don't use environment variables
       # (these should be only paths we constructed based on requested version)
-      FIND_PATH(MAYA_LOCATION bin/maya
+      FIND_PATH(MAYA_LOCATION maya
         PATHS
           ${_maya_TEST_PATHS}
+        PATH_SUFFIXES bin
         DOC "Maya's Base Directory"
         NO_SYSTEM_ENVIRONMENT_PATH
       )
