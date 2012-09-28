@@ -35,7 +35,7 @@
 #   OS-specific defines
 #   Post-commnad for correcting Qt library linking on osx
 #   Windows link flags for exporting initializePlugin/uninitializePlugin
-MACRO( MAYA_SET_PLUGIN_PROPERITES target)
+MACRO( MAYA_SET_PLUGIN_PROPERTIES target)
   SET_TARGET_PROPERTIES( ${target} PROPERTIES 
     SUFFIX ${MAYA_PLUGIN_SUFFIX}
   )
