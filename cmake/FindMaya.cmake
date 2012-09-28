@@ -35,7 +35,7 @@
 #   OS-specific defines
 #   Post-commnad for correcting Qt library linking on osx
 #   Windows link flags for exporting initializePlugin/uninitializePlugin
-MACRO( MAYA_SET_PLUGIN_PROPERITES target)
+MACRO( MAYA_SET_PLUGIN_PROPERTIES target)
   SET_TARGET_PROPERTIES( ${target} PROPERTIES 
     SUFFIX ${MAYA_PLUGIN_SUFFIX}
   )
@@ -84,7 +84,7 @@ MACRO( MAYA_SET_PLUGIN_PROPERITES target)
     )
   ENDIF()
   
-ENDMACRO(MAYA_SET_PLUGIN_PROPERITES)
+ENDMACRO(MAYA_SET_PLUGIN_PROPERTIES)
 
 
 SET(_maya_TEST_VERSIONS)
@@ -141,6 +141,7 @@ FIND_PROGRAM(MAYA_EXECUTABLE maya
     $ENV{MAYA_LOCATION}
     ${_maya_TEST_PATHS}
   PATH_SUFFIXES bin
+  NO_SYSTEM_ENVIRONMENT_PATH
   DOC "Maya's executable path"
 )
 
