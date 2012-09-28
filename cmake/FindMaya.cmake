@@ -141,6 +141,7 @@ FIND_PROGRAM(MAYA_EXECUTABLE maya
     $ENV{MAYA_LOCATION}
     ${_maya_TEST_PATHS}
   PATH_SUFFIXES bin
+  NO_SYSTEM_ENVIRONMENT_PATH
   DOC "Maya's executable path"
 )
 
