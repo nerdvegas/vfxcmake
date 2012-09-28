@@ -154,7 +154,7 @@ IF(MAYA_EXECUTABLE)
   IF(Maya_FIND_VERSION)
     # test that we've found a valid version
     LIST(FIND _maya_TEST_VERSIONS ${MAYA_VERSION} _maya_FOUND_INDEX)
-    IF(${_maya_FOUND_INDEX} GREATER -1)
+    IF(${_maya_FOUND_INDEX} EQUAL -1)
       MESSAGE(STATUS "Found Maya version ${MAYA_VERSION}, but requested at least ${Maya_FIND_VERSION}. Re-searching without environment variables...")
       SET(MAYA_LOCATION NOTFOUND)
       # search again, but don't use environment variables
@@ -169,7 +169,7 @@ IF(MAYA_EXECUTABLE)
       SET(MAYA_EXECUTABLE "${MAYA_LOCATION}/bin/maya" CACHE PATH "Maya's executable path")
       STRING(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
     #ELSE: error?
-    ENDIF(${_maya_FOUND_INDEX} GREATER -1)
+    ENDIF(${_maya_FOUND_INDEX} EQUAL -1)
   ENDIF(Maya_FIND_VERSION)
 ENDIF(MAYA_EXECUTABLE)
 
