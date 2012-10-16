@@ -9,13 +9,13 @@
 # MAYA_<lib>_FOUND       Defined if <lib> has been found
 # MAYA_<lib>_LIBRARY     Path to <lib> library
 # MAYA_LIBRARY_DIR       Path to the library directory
-# MAYA_INCLUDE_DIRS      Path to the devkit's include directories
+# MAYA_INCLUDE_DIR       Path to the devkit's include directories
 # MAYA_PLUGIN_SUFFIX     File extension for the maya plugin
 # MAYA_QT_VERSION_SHORT  Version of Qt used by Maya (e.g. 4.7)
 # MAYA_QT_VERSION_LONG   Full version of Qt used by Maya (e.g. 4.7.1)
 #
 # Macros provided:
-# MAYA_SET_PLUGIN_PROPERITES  passed the target name, this sets up typical plugin
+# MAYA_SET_PLUGIN_PROPERTIES  passed the target name, this sets up typical plugin
 #                             properties like macro defines, prefixes, and suffixes
 #
 # Naming convention:
