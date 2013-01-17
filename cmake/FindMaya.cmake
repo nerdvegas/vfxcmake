@@ -102,20 +102,24 @@ ENDIF()
 IF(Maya_FIND_VERSION_EXACT)
   LIST(APPEND _maya_TEST_VERSIONS "${Maya_FIND_VERSION}")
 ELSE(Maya_FIND_VERSION_EXACT)
+  # exact version not requested. we have some wiggle room
   IF(Maya_FIND_VERSION)
+    # loop through known versions and find anything >= requested
     FOREACH(version ${_maya_KNOWN_VERSIONS})
       IF(NOT "${version}" VERSION_LESS "${Maya_FIND_VERSION}")
         LIST(APPEND _maya_TEST_VERSIONS "${version}" )
       ENDIF()
     ENDFOREACH(version)
   ELSE(Maya_FIND_VERSION)
+    # no version specified: test everything
     SET(_maya_TEST_VERSIONS ${_maya_KNOWN_VERSIONS})
   ENDIF(Maya_FIND_VERSION)
 ENDIF(Maya_FIND_VERSION_EXACT)
 
+# create empty list
 SET(_maya_TEST_PATHS)
 
-# generate list of paths to test
+# from version list, generate list of paths to test based on canonical locations
 FOREACH(version ${_maya_TEST_VERSIONS})
   IF(APPLE)
     LIST(APPEND _maya_TEST_PATHS "/Applications/Autodesk/maya${version}/Maya.app/Contents")
@@ -135,7 +139,7 @@ FOREACH(version ${_maya_TEST_VERSIONS})
   ENDIF()
 ENDFOREACH(version)
 
-# search for maya within the MAYA_LOCATION and PATH env vars and test paths
+# search for maya executable within the MAYA_LOCATION and PATH env vars and test paths
 FIND_PROGRAM(MAYA_EXECUTABLE maya
   PATHS
     $ENV{MAYA_LOCATION}
@@ -147,6 +151,7 @@ FIND_PROGRAM(MAYA_EXECUTABLE maya
 
 IF(MAYA_EXECUTABLE)
   # TODO: use GET_FILENAME_COMPONENT here
+  # derive MAYA_LOCATION from MAYA_EXECUTABLE
   STRING(REGEX REPLACE "/bin/maya.*" "" MAYA_LOCATION "${MAYA_EXECUTABLE}")
 
   STRING(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
@@ -228,6 +233,7 @@ FOREACH(_maya_lib
 #  cg
 #  cgGL
 )
+  # HINTS is searched before PATHS, so preference is given to MAYA_LOCATION (set via MAYA_EXECUTABLE)
   IF(APPLE)
     FIND_LIBRARY(MAYA_${_maya_lib}_LIBRARY ${_maya_lib}
       HINTS
