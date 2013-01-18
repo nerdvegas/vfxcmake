@@ -2,9 +2,9 @@
 # This module searches for a valid Arnold instalation.
 #
 # Variables that will be defined:
-# ARNOLD_FOUND             Defined if a Maya installation has been detected
+# ARNOLD_FOUND             Defined if a Arnold installation has been detected
 # ARNOLD_LIBRARY           Path to ai library
-# ARNOLD_INCLUDE_DIR       Path to the devkit's include directories
+# ARNOLD_INCLUDE_DIR       Path to the include directory
 #
 # Naming convention:
 #  Local variables of the form _arnold_foo
@@ -23,7 +23,7 @@ find_library(ARNOLD_LIBRARY
 find_path(ARNOLD_INCLUDE_DIR ai.h
   PATHS
     $ENV{ARNOLD_HOME}/include
-  DOC "Maya's library path"
+  DOC "Arnold include path"
 )
 
 include(FindPackageHandleStandardArgs)
