@@ -1,24 +1,34 @@
 # - Maya finder module
-# This module searches for a valid Maya instalation.
-# It searches for Maya's devkit, libraries, executables
-# and related paths (scripts)
+# This module searches for a valid Maya instalation, including its devkit,
+# libraries, executables and related paths (scripts).
 #
-# Variables that will be defined:
-# MAYA_FOUND             Defined if a Maya installation has been detected
-# MAYA_EXECUTABLE        Path to Maya's executable
-# MAYA_<lib>_FOUND       Defined if <lib> has been found
-# MAYA_<lib>_LIBRARY     Path to <lib> library
-# MAYA_LIBRARY_DIR       Path to the library directory
-# MAYA_INCLUDE_DIR       Path to the devkit's include directories
-# MAYA_PLUGIN_SUFFIX     File extension for the maya plugin
-# MAYA_QT_VERSION_SHORT  Version of Qt used by Maya (e.g. 4.7)
-# MAYA_QT_VERSION_LONG   Full version of Qt used by Maya (e.g. 4.7.1)
+# Useful environment variables:
+#  MAYA_LOCATION          If defined in the shell environment, the contents
+#                         of this variable will be used as the first search
+#                         path for the Maya installation.
+#
+# Output variables:
+#  MAYA_FOUND             Defined if a Maya installation has been detected
+#  MAYA_EXECUTABLE        Path to Maya's executable
+#  MAYA_LIBRARIES         List of all Maya libraries that are found
+#  MAYA_<lib>_FOUND       Defined if <lib> has been found
+#  MAYA_<lib>_LIBRARY     Path to <lib> library
+#  MAYA_INCLUDE_DIRS      Path to the devkit's include directories
+#  MAYA_LIBRARY_DIRS      Path to the library directory
+#  MAYA_PLUGIN_SUFFIX     File extension for the maya plugin
+#  MAYA_QT_VERSION_SHORT  Version of Qt used by Maya (e.g. 4.7)
+#  MAYA_QT_VERSION_LONG   Full version of Qt used by Maya (e.g. 4.7.1)
+#
+# Deprecated output variables:
+#  MAYA_LIBRARY_DIR       Superseded by MAYA_LIBRARY_DIRS
+#  MAYA_INCLUDE_DIR       Superseded by MAYA_INCLUDE_DIRS
 #
 # Macros provided:
-# MAYA_SET_PLUGIN_PROPERTIES  passed the target name, this sets up typical plugin
-#                             properties like macro defines, prefixes, and suffixes
+#  MAYA_SET_PLUGIN_PROPERTIES  Passed the target name, this sets up typical
+#                              plugin properties like macro defines, prefixes,
+#                              and suffixes.
 #
-# Naming convention:
+# Naming conventions:
 #  Local variables of the form _maya_foo
 #  Input variables from CMake of the form Maya_FOO
 #  Output variables of the form MAYA_FOO
@@ -28,13 +38,12 @@
 # Macros
 #=============================================================================
 
-# macro for setting up typical plugin properties.
-# this includes:
-#   OS-specific plugin suffix (.mll, .so, .bundle)
-#   Removal of 'lib' prefix on osx/linux
-#   OS-specific defines
-#   Post-commnad for correcting Qt library linking on osx
-#   Windows link flags for exporting initializePlugin/uninitializePlugin
+# Macro for setting up typical plugin properties. These include:
+#  - OS-specific plugin suffix (.mll, .so, .bundle)
+#  - Removal of 'lib' prefix on osx/linux
+#  - OS-specific defines
+#  - Post-commnad for correcting Qt library linking on osx
+#  - Windows link flags for exporting initializePlugin/uninitializePlugin
 MACRO( MAYA_SET_PLUGIN_PROPERTIES target)
   SET_TARGET_PROPERTIES( ${target} PROPERTIES 
     SUFFIX ${MAYA_PLUGIN_SUFFIX}
@@ -201,7 +210,7 @@ ENDIF()
 
 MESSAGE(STATUS "Maya location: ${MAYA_LOCATION}")
 
-FIND_PATH(MAYA_INCLUDE_DIR maya/MFn.h
+FIND_PATH(MAYA_INCLUDE_DIRS maya/MFn.h
   HINTS
     ${MAYA_LOCATION}
   PATH_SUFFIXES
@@ -210,7 +219,7 @@ FIND_PATH(MAYA_INCLUDE_DIR maya/MFn.h
   DOC "Maya's include path"
 )
 
-FIND_PATH(MAYA_LIBRARY_DIR libOpenMaya.dylib libOpenMaya.so OpenMaya.lib
+FIND_PATH(MAYA_LIBRARY_DIRS libOpenMaya.dylib libOpenMaya.so OpenMaya.lib
   HINTS
     ${MAYA_LOCATION}
   PATH_SUFFIXES
@@ -218,6 +227,10 @@ FIND_PATH(MAYA_LIBRARY_DIR libOpenMaya.dylib libOpenMaya.so OpenMaya.lib
     MacOS  # osx
   DOC "Maya's library path"
 )
+
+# Set deprecated variables to avoid compatibility breaks
+SET(MAYA_INCLUDE_DIR ${MAYA_INCLUDE_DIRS})
+SET(MAYA_LIBRARY_DIR ${MAYA_LIBRARY_DIRS})
 
 
 FOREACH(_maya_lib
@@ -297,7 +310,9 @@ FIND_PATH(MAYA_USER_DIR
 # all LISTed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(Maya DEFAULT_MSG
-  MAYA_LIBRARIES MAYA_EXECUTABLE MAYA_INCLUDE_DIR MAYA_LIBRARY_DIR MAYA_VERSION MAYA_PLUGIN_SUFFIX MAYA_USER_DIR
+    MAYA_LIBRARIES MAYA_EXECUTABLE MAYA_INCLUDE_DIRS
+    MAYA_LIBRARY_DIRS MAYA_VERSION MAYA_PLUGIN_SUFFIX
+    MAYA_USER_DIR
 )
 
 #
