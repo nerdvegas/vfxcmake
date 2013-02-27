@@ -6,7 +6,7 @@
 #
 # MTOA_FOUND            set if MtoA is found.
 # MTOA_INCLUDE_DIR      MtoA's include directory
-# MtoA_mtoa_api_LIBRARY Full path location of libmtoa_api
+# MTOA_mtoa_api_LIBRARY Full path location of libmtoa_api
 
 FIND_PACKAGE ( PackageHandleStandardArgs )
 
@@ -29,15 +29,14 @@ IF (MTOA_FOUND)
   IF (WIN32)
   ELSEIF (APPLE)
 	SET( MTOA_LIBRARY_DIR "${MTOA_LOCATION}/bin" CACHE_STRING "MtoA library path" )
-    FIND_LIBRARY ( MtoA_mtoa_api_LIBRARY  mtoa_api  ${MTOA_LIBRARY_DIR} )
+    FIND_LIBRARY ( MTOA_mtoa_api_LIBRARY  mtoa_api  ${MTOA_LIBRARY_DIR} )
   ELSE (WIN32)
-	# Unices
+	# Linux
 	SET( MTOA_LIBRARY_DIR "${MTOA_LOCATION}/bin" CACHE_STRING "MtoA library path" )
-    FIND_LIBRARY ( MtoA_mtoa_api_LIBRARY  mtoa_api  ${MTOA_LIBRARY_DIR} )
+    FIND_LIBRARY ( MTOA_mtoa_api_LIBRARY  mtoa_api  ${MTOA_LIBRARY_DIR} )
   ENDIF (WIN32)
   SET(CMAKE_FIND_LIBRARY_SUFFIXES ${ORIGINAL_CMAKE_FIND_LIBRARY_SUFFIXES})
   
   SET( MTOA_INCLUDE_DIR "${MTOA_LOCATION}/include" CACHE STRING "MtoA include path")
 
-  
 ENDIF (MTOA_FOUND)
