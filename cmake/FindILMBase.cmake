@@ -14,7 +14,7 @@
 #
 
 # Handle deprecated root hint
-if( ILMBASE_ROOT )
+if(ILMBASE_ROOT)
     message(WARNING "ILMBASE_ROOT variable is deprecated. Use ILMBase_ROOT instead.")
     set(_ilmbase_ROOT_HINT ${ILMBASE_ROOT})
 else()
@@ -24,7 +24,7 @@ endif()
 find_path(_ilmbase_ROOT NAMES include/OpenEXR/IlmBaseConfig.h
     HINTS ${_ilmbase_ROOT_HINT})
 
-if( _ilmbase_ROOT )
+if(_ilmbase_ROOT)
     set(ILMBASE_INCLUDE_DIRS ${_ilmbase_ROOT}/include ${_ilmbase_ROOT}/include/OpenEXR)
     set(ILMBASE_LIBRARY_DIRS ${_ilmbase_ROOT}/lib)
 
@@ -34,7 +34,7 @@ if( _ilmbase_ROOT )
         ILMBASE_VERSION "${_ilmbase_PC_CONTENTS}")
 
     # (Static lib search logic taken from FindBoost.cmake)
-    if( ILMBase_USE_STATIC_LIBS )
+    if(ILMBase_USE_STATIC_LIBS)
         set(_ilmbase_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
         if(WIN32)
             set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
@@ -45,7 +45,7 @@ if( _ilmbase_ROOT )
 
     # Determine which libraries must be found (default is all)
     set(_ilmbase_VALID_COMPONENTS Half Iex IexMath IlmThread Imath)
-    if( ILMBase_FIND_COMPONENTS )
+    if(ILMBase_FIND_COMPONENTS)
         set(_ilmbase_REQUIRED_LIBS ${ILMBase_FIND_COMPONENTS})
     else()
         set(_ilmbase_REQUIRED_LIBS ${_ilmbase_VALID_COMPONENTS})
@@ -55,8 +55,8 @@ if( _ilmbase_ROOT )
     set(_ilmbase_LIB_VARS)
     foreach(_ilmbase_lib ${_ilmbase_REQUIRED_LIBS})
         list(FIND _ilmbase_VALID_COMPONENTS ${_ilmbase_lib} _ilmbase_requested_index)
-        if( _ilmbase_requested_index EQUAL -1 )
-            if( ILMBase_FIND_REQUIRED )
+        if(_ilmbase_requested_index EQUAL -1)
+            if(ILMBase_FIND_REQUIRED)
                 # If they "required" a lib we don't recognize, just abort here
                 message(FATAL_ERROR "Requested component ${_ilmbase_lib} is not a recognized ILMBase library")
             else()
@@ -71,7 +71,7 @@ if( _ilmbase_ROOT )
     endforeach()
 
     # Reset lib search suffix
-    if( ILMBase_USE_STATIC_LIBS )
+    if(ILMBase_USE_STATIC_LIBS)
         set(CMAKE_FIND_LIBRARY_SUFFIXES ${_ilmbase_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
     endif()
 endif()

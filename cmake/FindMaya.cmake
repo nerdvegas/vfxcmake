@@ -44,160 +44,147 @@
 #  - OS-specific defines
 #  - Post-commnad for correcting Qt library linking on osx
 #  - Windows link flags for exporting initializePlugin/uninitializePlugin
-MACRO( MAYA_SET_PLUGIN_PROPERTIES target)
-  SET_TARGET_PROPERTIES( ${target} PROPERTIES 
-    SUFFIX ${MAYA_PLUGIN_SUFFIX}
-  )
+macro(MAYA_SET_PLUGIN_PROPERTIES target)
+    set_target_properties(${target} PROPERTIES
+        SUFFIX ${MAYA_PLUGIN_SUFFIX})
+    
+    set(_maya_DEFINES REQUIRE_IOSTREAM _BOOL)
 
-  SET(_maya_DEFINES REQUIRE_IOSTREAM _BOOL)
+    if(APPLE)
+        set(_maya_DEFINES "${_maya_DEFINES}" MAC_PLUGIN OSMac_ OSMac_MachO)
+        set_target_properties(${target} PROPERTIES
+            PREFIX ""
+            COMPILE_DEFINITIONS "${_maya_DEFINES}")
 
-  IF(APPLE)
-    SET(_maya_DEFINES "${_maya_DEFINES}" MAC_PLUGIN OSMac_ OSMac_MachO)
-    SET_TARGET_PROPERTIES( ${target} PROPERTIES
-      PREFIX ""
-      COMPILE_DEFINITIONS "${_maya_DEFINES}"
-    )
+        if(QT_LIBRARIES)
+            set(_changes "")
+            foreach(_lib ${QT_LIBRARIES})
+                if("${_lib}" MATCHES ".*framework.*")
+                    get_filename_component(_shortname ${_lib} NAME)
+                    string(REPLACE ".framework" "" _shortname ${_shortname})
+                    # FIXME: QT_LIBRARIES does not provide the entire path to the lib.
+                    #  it provides /usr/local/qt/4.7.2/lib/QtGui.framework
+                    #  but we need /usr/local/qt/4.7.2/lib/QtGui.framework/Versions/4/QtGui
+                    # below is a hack, likely to break on other configurations
+                    set(_changes ${_changes} "-change" "${_lib}/Versions/4/${_shortname}" "@executable_path/${_shortname}")
+                endif()
+            endforeach()
 
-    IF(QT_LIBRARIES)
-      SET(_changes "")
-      FOREACH(_lib ${QT_LIBRARIES})
-        IF("${_lib}" MATCHES ".*framework.*")
-          GET_FILENAME_COMPONENT(_shortname ${_lib} NAME)
-          STRING(REPLACE ".framework" "" _shortname ${_shortname})
-          # FIXME: QT_LIBRARIES does not provide the entire path to the lib.
-          #  it provides /usr/local/qt/4.7.2/lib/QtGui.framework
-          #  but we need /usr/local/qt/4.7.2/lib/QtGui.framework/Versions/4/QtGui
-          # below is a hack, likely to break on other configurations
-          SET(_changes ${_changes} "-change" "${_lib}/Versions/4/${_shortname}" "@executable_path/${_shortname}")
-        ENDIF()
-      ENDFOREACH(_lib)
-  
-      ADD_CUSTOM_COMMAND(
-        TARGET ${target}
-        POST_BUILD
-        COMMAND install_name_tool ${_changes} $<TARGET_FILE:${target}>
-      )
-    ENDIF(QT_LIBRARIES)
+            add_custom_command(TARGET ${target}
+                POST_BUILD
+                COMMAND install_name_tool ${_changes} $<TARGET_FILE:${target}>)
+        endif()
 
-  ELSEIF(WIN32)
-    SET(_maya_DEFINES "${_maya_DEFINES}" _AFXDLL _MBCS NT_PLUGIN)
-    SET_TARGET_PROPERTIES( ${target} PROPERTIES
-      LINK_FLAGS "/export:initializePlugin /export:uninitializePlugin"
-      COMPILE_DEFINITIONS "${_maya_DEFINES}"
-    )
-  ELSE()
-    SET(_maya_DEFINES "${_maya_DEFINES}" LINUX LINUX_64)
-    SET_TARGET_PROPERTIES( ${target} PROPERTIES
-      PREFIX ""
-      COMPILE_DEFINITIONS "${_maya_DEFINES}"
-    )
-  ENDIF()
-  
-ENDMACRO(MAYA_SET_PLUGIN_PROPERTIES)
+    elseif(WIN32)
+        set(_maya_DEFINES "${_maya_DEFINES}" _AFXDLL _MBCS NT_PLUGIN)
+        set_target_properties( ${target} PROPERTIES
+            LINK_FLAGS "/export:initializePlugin /export:uninitializePlugin"
+            COMPILE_DEFINITIONS "${_maya_DEFINES}")
+    else()
+        set(_maya_DEFINES "${_maya_DEFINES}" LINUX LINUX_64)
+        set_target_properties( ${target} PROPERTIES
+            PREFIX ""
+            COMPILE_DEFINITIONS "${_maya_DEFINES}")
+    endif()
+endmacro(MAYA_SET_PLUGIN_PROPERTIES)
 
 
-SET(_maya_TEST_VERSIONS)
-SET(_maya_KNOWN_VERSIONS "2008" "2009" "2010" "2011" "2012" "2013")
+set(_maya_TEST_VERSIONS)
+set(_maya_KNOWN_VERSIONS "2008" "2009" "2010" "2011" "2012" "2013")
 
-IF(APPLE)
-  SET(MAYA_PLUGIN_SUFFIX ".bundle")
-ELSEIF(WIN32)
-  SET(MAYA_PLUGIN_SUFFIX ".mll")
-ELSE() #LINUX
-  SET(MAYA_PLUGIN_SUFFIX ".so")
-ENDIF()
+if(APPLE)
+    set(MAYA_PLUGIN_SUFFIX ".bundle")
+elseif(WIN32)
+    set(MAYA_PLUGIN_SUFFIX ".mll")
+else() #LINUX
+    set(MAYA_PLUGIN_SUFFIX ".so")
+endif()
 
 # generate list of versions to test
-IF(Maya_FIND_VERSION_EXACT)
-  LIST(APPEND _maya_TEST_VERSIONS "${Maya_FIND_VERSION}")
-ELSE(Maya_FIND_VERSION_EXACT)
-  # exact version not requested. we have some wiggle room
-  IF(Maya_FIND_VERSION)
-    # loop through known versions and find anything >= requested
-    FOREACH(version ${_maya_KNOWN_VERSIONS})
-      IF(NOT "${version}" VERSION_LESS "${Maya_FIND_VERSION}")
-        LIST(APPEND _maya_TEST_VERSIONS "${version}" )
-      ENDIF()
-    ENDFOREACH(version)
-  ELSE(Maya_FIND_VERSION)
-    # no version specified: test everything
-    SET(_maya_TEST_VERSIONS ${_maya_KNOWN_VERSIONS})
-  ENDIF(Maya_FIND_VERSION)
-ENDIF(Maya_FIND_VERSION_EXACT)
+if(Maya_FIND_VERSION_EXACT)
+    list(APPEND _maya_TEST_VERSIONS "${Maya_FIND_VERSION}")
+else(Maya_FIND_VERSION_EXACT)
+    # exact version not requested. we have some wiggle room
+    if(Maya_FIND_VERSION)
+        # loop through known versions and find anything >= requested
+        foreach(version ${_maya_KNOWN_VERSIONS})
+            if(NOT "${version}" VERSION_LESS "${Maya_FIND_VERSION}")
+                list(APPEND _maya_TEST_VERSIONS "${version}")
+            endif()
+        endforeach()
+    else(Maya_FIND_VERSION)
+        # no version specified: test everything
+        set(_maya_TEST_VERSIONS ${_maya_KNOWN_VERSIONS})
+    endif()
+endif()
 
 # create empty list
-SET(_maya_TEST_PATHS)
+set(_maya_TEST_PATHS)
 
 # from version list, generate list of paths to test based on canonical locations
-FOREACH(version ${_maya_TEST_VERSIONS})
-  IF(APPLE)
-    LIST(APPEND _maya_TEST_PATHS "/Applications/Autodesk/maya${version}/Maya.app/Contents")
-  ELSEIF(WIN32)
-    SET(_maya_TEST_PATHS ${_maya_TEST_PATHS}
-      "$ENV{PROGRAMFILES}/Autodesk/Maya${version}-x64"
-      "$ENV{PROGRAMFILES}/Autodesk/Maya${version}"
-      "C:/Program Files/Autodesk/Maya${version}-x64"
-      "C:/Program Files/Autodesk/Maya${version}"
-      "C:/Program Files (x86)/Autodesk/Maya${version}"
-   )
-  ELSE() #Linux
-    SET(_maya_TEST_PATHS ${_maya_TEST_PATHS}
-      "/usr/autodesk/maya${version}-x64"
-      "/usr/autodesk/maya${version}"
-    )
-  ENDIF()
-ENDFOREACH(version)
+foreach(version ${_maya_TEST_VERSIONS})
+    if(APPLE)
+        list(APPEND _maya_TEST_PATHS "/Applications/Autodesk/maya${version}/Maya.app/Contents")
+    elseif(WIN32)
+        set(_maya_TEST_PATHS ${_maya_TEST_PATHS}
+            "$ENV{PROGRAMFILES}/Autodesk/Maya${version}-x64"
+            "$ENV{PROGRAMFILES}/Autodesk/Maya${version}"
+            "C:/Program Files/Autodesk/Maya${version}-x64"
+            "C:/Program Files/Autodesk/Maya${version}"
+            "C:/Program Files (x86)/Autodesk/Maya${version}")
+    else() #Linux
+        set(_maya_TEST_PATHS ${_maya_TEST_PATHS}
+            "/usr/autodesk/maya${version}-x64"
+            "/usr/autodesk/maya${version}")
+    endif()
+endforeach(version)
 
 # search for maya executable within the MAYA_LOCATION and PATH env vars and test paths
-FIND_PROGRAM(MAYA_EXECUTABLE maya
-  PATHS
-    $ENV{MAYA_LOCATION}
-    ${_maya_TEST_PATHS}
-  PATH_SUFFIXES bin
-  NO_SYSTEM_ENVIRONMENT_PATH
-  DOC "Maya's executable path"
-)
+find_program(MAYA_EXECUTABLE maya
+    PATHS $ENV{MAYA_LOCATION} ${_maya_TEST_PATHS}
+    PATH_SUFFIXES bin
+    NO_SYSTEM_ENVIRONMENT_PATH
+    DOC "Maya's executable path")
 
-IF(MAYA_EXECUTABLE)
-  # TODO: use GET_FILENAME_COMPONENT here
-  # derive MAYA_LOCATION from MAYA_EXECUTABLE
-  STRING(REGEX REPLACE "/bin/maya.*" "" MAYA_LOCATION "${MAYA_EXECUTABLE}")
+if(MAYA_EXECUTABLE)
+    # TODO: use GET_FILENAME_COMPONENT here
+    # derive MAYA_LOCATION from MAYA_EXECUTABLE
+    string(REGEX REPLACE "/bin/maya.*" "" MAYA_LOCATION "${MAYA_EXECUTABLE}")
 
-  STRING(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
-    
-  IF(Maya_FIND_VERSION)
-    # test that we've found a valid version
-    LIST(FIND _maya_TEST_VERSIONS ${MAYA_VERSION} _maya_FOUND_INDEX)
-    IF(${_maya_FOUND_INDEX} EQUAL -1)
-      MESSAGE(STATUS "Found Maya version ${MAYA_VERSION}, but requested at least ${Maya_FIND_VERSION}. Re-searching without environment variables...")
-      SET(MAYA_LOCATION NOTFOUND)
-      # search again, but don't use environment variables
-      # (these should be only paths we constructed based on requested version)
-      FIND_PATH(MAYA_LOCATION maya
-        PATHS
-          ${_maya_TEST_PATHS}
-        PATH_SUFFIXES bin
-        DOC "Maya's Base Directory"
-        NO_SYSTEM_ENVIRONMENT_PATH
-      )
-      SET(MAYA_EXECUTABLE "${MAYA_LOCATION}/bin/maya" CACHE PATH "Maya's executable path")
-      STRING(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
-    #ELSE: error?
-    ENDIF(${_maya_FOUND_INDEX} EQUAL -1)
-  ENDIF(Maya_FIND_VERSION)
-ENDIF(MAYA_EXECUTABLE)
+    string(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
+
+    if(Maya_FIND_VERSION)
+        # test that we've found a valid version
+        list(FIND _maya_TEST_VERSIONS ${MAYA_VERSION} _maya_FOUND_INDEX)
+        if(${_maya_FOUND_INDEX} EQUAL -1)
+            message(STATUS "Found Maya version ${MAYA_VERSION}, but requested at least ${Maya_FIND_VERSION}. Re-searching without environment variables...")
+            set(MAYA_LOCATION NOTFOUND)
+            # search again, but don't use environment variables
+            # (these should be only paths we constructed based on requested version)
+            find_path(MAYA_LOCATION maya
+                PATHS ${_maya_TEST_PATHS}
+                PATH_SUFFIXES bin
+                DOC "Maya's Base Directory"
+                NO_SYSTEM_ENVIRONMENT_PATH)
+            set(MAYA_EXECUTABLE "${MAYA_LOCATION}/bin/maya"
+                CACHE PATH "Maya's executable path")
+            string(REGEX MATCH "20[0-9][0-9]" MAYA_VERSION "${MAYA_LOCATION}")
+        #ELSE: error?
+        endif()
+    endif()
+endif()
 
 # Qt Versions
-IF(${MAYA_VERSION} STREQUAL "2011")
-  SET(MAYA_QT_VERSION_SHORT CACHE STRING "4.5")
-  SET(MAYA_QT_VERSION_LONG  CACHE STRING "4.5.3")
-ELSEIF(${MAYA_VERSION} STREQUAL "2012")
-  SET(MAYA_QT_VERSION_SHORT CACHE STRING "4.7")
-  SET(MAYA_QT_VERSION_LONG  CACHE STRING "4.7.1")
-ELSEIF(${MAYA_VERSION} STREQUAL "2013")
-  SET(MAYA_QT_VERSION_SHORT CACHE STRING "4.7")
-  SET(MAYA_QT_VERSION_LONG  CACHE STRING "4.7.1")
-ENDIF()
+if(${MAYA_VERSION} STREQUAL "2011")
+    set(MAYA_QT_VERSION_SHORT CACHE STRING "4.5")
+    set(MAYA_QT_VERSION_LONG  CACHE STRING "4.5.3")
+elseif(${MAYA_VERSION} STREQUAL "2012")
+    set(MAYA_QT_VERSION_SHORT CACHE STRING "4.7")
+    set(MAYA_QT_VERSION_LONG  CACHE STRING "4.7.1")
+elseif(${MAYA_VERSION} STREQUAL "2013")
+    set(MAYA_QT_VERSION_SHORT CACHE STRING "4.7")
+    set(MAYA_QT_VERSION_LONG  CACHE STRING "4.7.1")
+endif()
 
 # NOTE: the MAYA_LOCATION environment variable is often misunderstood.  On every OS it is expected to point
 # directly above bin/maya. Relative paths from $MAYA_LOCATION to include, lib, and devkit directories vary depending on OS.
@@ -208,112 +195,98 @@ ENDIF()
 # - If the maya executable is found in a standard location, or in $MAYA_LOCATION/bin or $PATH, and the
 #   includes and libs are in standard locations relative to the binary, they will be found
 
-MESSAGE(STATUS "Maya location: ${MAYA_LOCATION}")
+message(STATUS "Maya location: ${MAYA_LOCATION}")
 
-FIND_PATH(MAYA_INCLUDE_DIRS maya/MFn.h
-  HINTS
-    ${MAYA_LOCATION}
-  PATH_SUFFIXES
-    include               # linux and windows
-    ../../devkit/include  # osx
-  DOC "Maya's include path"
-)
+find_path(MAYA_INCLUDE_DIRS maya/MFn.h
+    HINTS ${MAYA_LOCATION}
+    PATH_SUFFIXES
+        include               # linux and windows
+        ../../devkit/include  # osx
+    DOC "Maya's include path")
 
-FIND_PATH(MAYA_LIBRARY_DIRS libOpenMaya.dylib libOpenMaya.so OpenMaya.lib
-  HINTS
-    ${MAYA_LOCATION}
-  PATH_SUFFIXES
-    lib    # linux and windows
-    MacOS  # osx
-  DOC "Maya's library path"
-)
+find_path(MAYA_LIBRARY_DIRS libOpenMaya.dylib libOpenMaya.so OpenMaya.lib
+    HINTS ${MAYA_LOCATION}
+    PATH_SUFFIXES
+        lib    # linux and windows
+        MacOS  # osx
+    DOC "Maya's library path")
 
 # Set deprecated variables to avoid compatibility breaks
-SET(MAYA_INCLUDE_DIR ${MAYA_INCLUDE_DIRS})
-SET(MAYA_LIBRARY_DIR ${MAYA_LIBRARY_DIRS})
+set(MAYA_INCLUDE_DIR ${MAYA_INCLUDE_DIRS})
+set(MAYA_LIBRARY_DIR ${MAYA_LIBRARY_DIRS})
 
 
-FOREACH(_maya_lib
-  OpenMaya
-  OpenMayaAnim
-  OpenMayaFX
-  OpenMayaRender
-  OpenMayaUI
-  Image
-  Foundation
-  IMFbase
-  tbb
-#  cg
-#  cgGL
-)
-  # HINTS is searched before PATHS, so preference is given to MAYA_LOCATION (set via MAYA_EXECUTABLE)
-  IF(APPLE)
-    FIND_LIBRARY(MAYA_${_maya_lib}_LIBRARY ${_maya_lib}
-      HINTS
-        ${MAYA_LOCATION}
-      PATHS
-        ${_maya_TEST_PATHS}
-      PATH_SUFFIXES
-        MacOS  # osx
-      NO_CMAKE_SYSTEM_PATH # this must be used or else Foundation.framework will be found instead of libFoundation
-      DOC "Maya's ${MAYA_LIB} library path"
-    )
-  ELSE(APPLE)
-    FIND_LIBRARY(MAYA_${_maya_lib}_LIBRARY ${_maya_lib}
-      HINTS
-        ${MAYA_LOCATION}
-      PATHS
-        ${_maya_TEST_PATHS}
-      PATH_SUFFIXES
-        lib    # linux and windows
-      DOC "Maya's ${MAYA_LIB} library path"
-    )
-  ENDIF()
-  LIST(APPEND MAYA_LIBRARIES ${MAYA_${_maya_lib}_LIBRARY})
-ENDFOREACH(_maya_lib)
+foreach(_maya_lib
+    OpenMaya
+    OpenMayaAnim
+    OpenMayaFX
+    OpenMayaRender
+    OpenMayaUI
+    Image
+    Foundation
+    IMFbase
+    tbb)
+#   cg
+#   cgGL
+    # HINTS is searched before PATHS, so preference is given to MAYA_LOCATION
+    # (set via MAYA_EXECUTABLE)
+    if(APPLE)
+        find_library(MAYA_${_maya_lib}_LIBRARY ${_maya_lib}
+            HINTS ${MAYA_LOCATION}
+            PATHS ${_maya_TEST_PATHS}
+            PATH_SUFFIXES MacOS
+            # This must be used or else Foundation.framework will be found instead of libFoundation
+            NO_CMAKE_SYSTEM_PATH
+            DOC "Maya's ${MAYA_LIB} library path")
+    else()
+        find_library(MAYA_${_maya_lib}_LIBRARY ${_maya_lib}
+            HINTS ${MAYA_LOCATION}
+            PATHS ${_maya_TEST_PATHS}
+            PATH_SUFFIXES lib # linux and windows
+            DOC "Maya's ${MAYA_LIB} library path")
+    endif()
+    list(APPEND MAYA_LIBRARIES ${MAYA_${_maya_lib}_LIBRARY})
+endforeach()
 
 
-FIND_PATH(MAYA_USER_DIR
-  NAMES
-    ${MAYA_VERSION}-x64 ${MAYA_VERSION}
-  PATHS
-    $ENV{HOME}/Library/Preferences/Autodesk/maya  # osx
-    $ENV{USERPROFILE}/Documents/maya              # windows
-    $ENV{HOME}/maya                               # linux
-  DOC "Maya user home directory"
-  NO_SYSTEM_ENVIRONMENT_PATH
-)
+find_path(MAYA_USER_DIR
+    NAMES ${MAYA_VERSION}-x64 ${MAYA_VERSION}
+    PATHS
+        $ENV{HOME}/Library/Preferences/Autodesk/maya  # osx
+        $ENV{USERPROFILE}/Documents/maya              # windows
+        $ENV{HOME}/maya                               # linux
+    DOC "Maya user home directory"
+    NO_SYSTEM_ENVIRONMENT_PATH)
 
-# IF (Maya_FOUND)
-#     IF (NOT Maya_FIND_QUIETLY)
-#       MESSAGE(STATUS "Maya version: ${Maya_MAJOR_VERSION}.${Maya_MINOR_VERSION}.${Maya_SUBMINOR_VERSION}")
-#     ENDIF(NOT Maya_FIND_QUIETLY)
-#     IF (NOT Maya_FIND_QUIETLY)
-#       MESSAGE(STATUS "Found the following Maya libraries:")
-#     ENDIF(NOT Maya_FIND_QUIETLY)
-#     FOREACH ( COMPONENT  ${Maya_FIND_COMPONENTS} )
-#       STRING( TOUPPER ${COMPONENT} UPPERCOMPONENT )
-#       IF ( Maya_${UPPERCOMPONENT}_FOUND )
-#         IF (NOT Maya_FIND_QUIETLY)
-#           MESSAGE (STATUS "  ${COMPONENT}")
-#         ENDIF(NOT Maya_FIND_QUIETLY)
-#         SET(Maya_LIBRARIES ${Maya_LIBRARIES} ${Maya_${UPPERCOMPONENT}_LIBRARY})
-#       ENDIF ( Maya_${UPPERCOMPONENT}_FOUND )
-#     ENDFOREACH(COMPONENT)
-# ELSE (Maya_FOUND)
-#     IF (Maya_FIND_REQUIRED)
-#       message(SEND_ERROR "Unable to find the requested Maya libraries.\n${Maya_ERROR_REASON}")
-#     ENDIF(Maya_FIND_REQUIRED)
-# ENDIF(Maya_FOUND)
+# if (Maya_FOUND)
+#     if (NOT Maya_FIND_QUIETLY)
+#         message(STATUS "Maya version: ${Maya_MAJOR_VERSION}.${Maya_MINOR_VERSION}.${Maya_SUBMINOR_VERSION}")
+#     endif()
+#     if (NOT Maya_FIND_QUIETLY)
+#         message(STATUS "Found the following Maya libraries:")
+#     endif()
+#     foreach(COMPONENT ${Maya_FIND_COMPONENTS})
+#         string(TOUPPER ${COMPONENT} UPPERCOMPONENT)
+#         if(Maya_${UPPERCOMPONENT}_FOUND)
+#             if(NOT Maya_FIND_QUIETLY)
+#                 message(STATUS "  ${COMPONENT}")
+#             endif()
+#             set(Maya_LIBRARIES ${Maya_LIBRARIES} ${Maya_${UPPERCOMPONENT}_LIBRARY})
+#         endif()
+#     endforeach()
+# else()
+#     if(Maya_FIND_REQUIRED)
+#         message(SEND_ERROR "Unable to find the requested Maya libraries.\n${Maya_ERROR_REASON}")
+#     endif()
+# endif()
 
-# handle the QUIETLY and REQUIRED arguments and SET MAYA_FOUND to TRUE if
-# all LISTed variables are TRUE
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Maya DEFAULT_MSG
+# Handles the QUIETLY and REQUIRED arguments and sets MAYA_FOUND to TRUE if
+# all passed variables are TRUE
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Maya DEFAULT_MSG
     MAYA_LIBRARIES MAYA_EXECUTABLE MAYA_INCLUDE_DIRS
     MAYA_LIBRARY_DIRS MAYA_VERSION MAYA_PLUGIN_SUFFIX
-    MAYA_USER_DIR
-)
+    MAYA_USER_DIR)
 
 #
 # Copyright 2012, Chad Dombrova
