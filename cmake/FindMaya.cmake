@@ -103,7 +103,7 @@ endif()
 # generate list of versions to test
 if(Maya_FIND_VERSION_EXACT)
     list(APPEND _maya_TEST_VERSIONS "${Maya_FIND_VERSION}")
-else(Maya_FIND_VERSION_EXACT)
+else()
     # exact version not requested. we have some wiggle room
     if(Maya_FIND_VERSION)
         # loop through known versions and find anything >= requested
@@ -112,7 +112,7 @@ else(Maya_FIND_VERSION_EXACT)
                 list(APPEND _maya_TEST_VERSIONS "${version}")
             endif()
         endforeach()
-    else(Maya_FIND_VERSION)
+    else()
         # no version specified: test everything
         set(_maya_TEST_VERSIONS ${_maya_KNOWN_VERSIONS})
     endif()
