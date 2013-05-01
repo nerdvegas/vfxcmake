@@ -10,6 +10,7 @@
 # Output variables:
 #  MAYA_FOUND             Defined if a Maya installation has been detected
 #  MAYA_EXECUTABLE        Path to Maya's executable
+#  MAYA_VERSION           Version of Maya determined from MAYA_EXECUTABLE (20xx)
 #  MAYA_LIBRARIES         List of all Maya libraries that are found
 #  MAYA_<lib>_FOUND       Defined if <lib> has been found
 #  MAYA_<lib>_LIBRARY     Path to <lib> library
@@ -90,7 +91,7 @@ endmacro(MAYA_SET_PLUGIN_PROPERTIES)
 
 
 set(_maya_TEST_VERSIONS)
-set(_maya_KNOWN_VERSIONS "2008" "2009" "2010" "2011" "2012" "2013")
+set(_maya_KNOWN_VERSIONS "2008" "2009" "2010" "2011" "2012" "2013" "2014")
 
 if(APPLE)
     set(MAYA_PLUGIN_SUFFIX ".bundle")
@@ -184,6 +185,9 @@ elseif(${MAYA_VERSION} STREQUAL "2012")
 elseif(${MAYA_VERSION} STREQUAL "2013")
     set(MAYA_QT_VERSION_SHORT CACHE STRING "4.7")
     set(MAYA_QT_VERSION_LONG  CACHE STRING "4.7.1")
+elseif(${MAYA_VERSION} STREQUAL "2014")
+    set(MAYA_QT_VERSION_SHORT CACHE STRING "4.8")
+    set(MAYA_QT_VERSION_LONG  CACHE STRING "4.8.2")
 endif()
 
 # NOTE: the MAYA_LOCATION environment variable is often misunderstood.  On every OS it is expected to point
