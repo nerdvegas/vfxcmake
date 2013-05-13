@@ -50,4 +50,4 @@ Maya Example
     )
     
     # this is a macro defined in FindMaya that sets up our plugin with standard Maya build settings
-    MAYA_SET_PLUGIN_PROPERITES( myplugin_plugin )
+    MAYA_SET_PLUGIN_PROPERTIES( myplugin_plugin )
