@@ -11,13 +11,13 @@ macro(GetBoost)
     unset(Boost_INCLUDE_DIR CACHE)
     unset(Boost_LIBRARY_DIRS CACHE)
     unset(Boost_FOUND)
-    
+
     set(Boost_DETAILED_FAILURE_MSG 1)
     find_package(Boost ${ARGV})
-    
+
     if(Boost_FOUND)
         set(Boost_NORMALIZED_VERSION ${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION})
-    endif(Boost_FOUND)
+    endif()
 endmacro(GetBoost)
 
 

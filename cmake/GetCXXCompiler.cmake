@@ -11,25 +11,21 @@ function(GetCXXCompiler _PREFIX)
     set(${_PREFIX}_COMPILER_BINARY ${CMAKE_CXX_COMPILER} PARENT_SCOPE)
     set(${_PREFIX}_COMPILER_VERSION FALSE PARENT_SCOPE)
 
-    execute_process(
-        COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
-        OUTPUT_VARIABLE _VER_PROC_OUT RESULT_VARIABLE _PROC_RES ERROR_QUIET
-    )
-    
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
+        OUTPUT_VARIABLE _VER_PROC_OUT RESULT_VARIABLE _PROC_RES ERROR_QUIET)
+
     if(_PROC_RES)
-        execute_process(
-            COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} --version
-            OUTPUT_VARIABLE _VER_PROC_OUT RESULT_VARIABLE _PROC_RES ERROR_QUIET
-        )
-    endif(_PROC_RES)
-    
+        execute_process(COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} --version
+            OUTPUT_VARIABLE _VER_PROC_OUT RESULT_VARIABLE _PROC_RES ERROR_QUIET)
+    endif()
+
     if(NOT _PROC_RES)
         string(REGEX MATCH "[0-9]+(\\.[0-9]+)*" _COMPILER_VERSION ${_VER_PROC_OUT})
         if(_COMPILER_VERSION)
             set(${_PREFIX}_COMPILER_VERSION ${_COMPILER_VERSION} PARENT_SCOPE)
-        endif(_COMPILER_VERSION)
-    endif(NOT _PROC_RES)    
-endfunction()
+        endif()
+    endif()
+endfunction(GetCXXCompiler)
 
 
 
