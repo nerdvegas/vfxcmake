@@ -7,6 +7,7 @@
 # MTOA_FOUND            set if MtoA is found.
 # MTOA_INCLUDE_DIR      MtoA's include directory
 # MTOA_mtoa_api_LIBRARY Full path location of libmtoa_api
+# MTOA_LIBRARY          Alias for MTOA_mtoa_api_LIBRARY
 
 find_package(PackageHandleStandardArgs)
 
@@ -60,5 +61,6 @@ if(MTOA_FOUND)
         CACHE STRING "MtoA include path")
         message(STATUS "MTOA location: ${MTOA_LOCATION}")
 		message(STATUS "MTOA LIB:      ${MTOA_mtoa_api_LIBRARY}")
-		message(STATUS "MTOA INCLUDE:  ${MTOA_INCLUDE_DIR}")
+		message(STATUS "MTOA include:  ${MTOA_INCLUDE_DIR}")
+    set(MTOA_LIBRARY ${MTOA_mtoa_api_LIBRARY})
 endif()
