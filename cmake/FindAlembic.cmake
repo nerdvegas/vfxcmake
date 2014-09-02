@@ -4,6 +4,9 @@
 #  Alembic_ROOT
 #  Alembic_USE_STATIC_LIBS
 #
+# Input environment variables:
+#  ALEMBIC_ROOT
+#
 # Output variables:
 #  ALEMBIC_FOUND
 #  ALEMBIC_INCLUDE_DIRS
