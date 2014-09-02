@@ -35,6 +35,26 @@
 #  Output variables of the form MAYA_FOO
 #
 
+# OS variables
+SET( _WINDOWS FALSE )
+IF( "${CMAKE_SYSTEM_NAME}" MATCHES "Windows" )
+  SET( _WINDOWS TRUE )
+ENDIF()
+
+SET( _DARWIN FALSE )
+IF( "${CMAKE_SYSTEM_NAME}" MATCHES "Darwin" )
+  SET( _DARWIN TRUE )
+  IF( ${CMAKE_SYSTEM_VERSION} MATCHES "13." )
+       ADD_DEFINITIONS( "-std=c++11" )
+  ENDIF()
+ENDIF()
+
+SET( _LINUX FALSE )
+IF( "${CMAKE_SYSTEM_NAME}" MATCHES "Linux" )
+  SET( _LINUX TRUE )
+ENDIF()
+
+
 #=============================================================================
 # Macros
 #=============================================================================
@@ -46,16 +66,18 @@
 #  - Post-commnad for correcting Qt library linking on osx
 #  - Windows link flags for exporting initializePlugin/uninitializePlugin
 macro(MAYA_SET_PLUGIN_PROPERTIES target)
-    set_target_properties(${target} PROPERTIES
-        SUFFIX ${MAYA_PLUGIN_SUFFIX})
-    
-    set(_maya_DEFINES REQUIRE_IOSTREAM _BOOL)
 
     if(APPLE)
-        set(_maya_DEFINES "${_maya_DEFINES}" _DARWIN MAC_PLUGIN OSMac_ OSMac_MachO)
-        set_target_properties(${target} PROPERTIES
-            PREFIX ""
-            COMPILE_DEFINITIONS "${_maya_DEFINES}")
+        set(MAYA_EXTENSION ".bundle")
+        set(MAYA_COMPILE_DEFINITIONS AW_NEW_IOSTREAMS REQUIRE_IOSTREAM _BOOL _DARWIN MAC_PLUGIN
+            OSMac_ OSMac_MachO OSMacOSX_ CC_GNU_ _LANGUAGE_C_PLUS_PLUS)
+        set(MAYA_COMPILE_FLAGS
+          "-fno-gnu-keywords -include ${MAYA_INCLUDE_PATH}/maya/OpenMayaMac.h" )
+
+        set(MAYA_LINK_FLAGS
+          #"-dynamic -g -fPIC "
+          #"-shared -g -fPIC "
+          "-fno-gnu-keywords -framework System  -framework SystemConfiguration -framework CoreServices -framework Carbon -framework Cocoa -framework ApplicationServices -framework Quicktime -framework IOKit -bundle -fPIC -L${ALEMBIC_MAYA_LIB_ROOT} -Wl,-executable_path,${ALEMBIC_MAYA_LIB_ROOT}" )
 
         if(QT_LIBRARIES)
             set(_changes "")
@@ -77,16 +99,28 @@ macro(MAYA_SET_PLUGIN_PROPERTIES target)
         endif()
 
     elseif(WIN32)
-        set(_maya_DEFINES "${_maya_DEFINES}" _AFXDLL _MBCS NT_PLUGIN)
-        set_target_properties( ${target} PROPERTIES
-            LINK_FLAGS "/export:initializePlugin /export:uninitializePlugin"
-            COMPILE_DEFINITIONS "${_maya_DEFINES}")
+        set(MAYA_EXTENSION ".mll")
+        set(MAYA_COMPILE_DEFINITIONS REQUIRE_IOSTREAM _BOOL _AFXDLL _MBCS NT_PLUGIN)
+        set(MAYA_LINK_FLAGS "/export:initializePlugin /export:uninitializePlugin")
+        set( MAYA_COMPILE_FLAGS "/MD")
     else()
-        set(_maya_DEFINES "${_maya_DEFINES}" LINUX LINUX_64)
-        set_target_properties( ${target} PROPERTIES
-            PREFIX ""
-            COMPILE_DEFINITIONS "${_maya_DEFINES}")
+        set(MAYA_EXTENSION ".so")
+        set(MAYA_COMPILE_DEFINITIONS REQUIRE_IOSTREAM _BOOL LINUX _LINUX LINUX_64)
+        set(MAYA_COMPILE_FLAGS
+          "-m64 -g -pthread -pipe -fPIC -Wno-deprecated -fno-gnu-keywords" )
+
+        set(MAYA_LINK_FLAGS
+          "-shared -m64 -g -pthread -pipe -fPIC -Wno-deprecated -fno-gnu-keywords -Wl,-Bsymbolic" )
     endif()
+
+    set_target_properties( ${target} PROPERTIES
+        COMPILE_DEFINITIONS "${MAYA_COMPILE_DEFINITIONS}"
+        COMPILE_FLAGS "${MAYA_COMPILE_FLAGS}"
+        LINK_FLAGS "${MAYA_LINK_FLAGS}"
+        PREFIX ""
+        SUFFIX ${MAYA_EXTENSION}
+    )
+
 endmacro(MAYA_SET_PLUGIN_PROPERTIES)
 
 
@@ -291,6 +325,7 @@ find_package_handle_standard_args(Maya DEFAULT_MSG
     MAYA_LIBRARIES MAYA_EXECUTABLE MAYA_INCLUDE_DIRS
     MAYA_LIBRARY_DIRS MAYA_VERSION MAYA_PLUGIN_SUFFIX
     MAYA_USER_DIR)
+
 
 #
 # Copyright 2012, Chad Dombrova
