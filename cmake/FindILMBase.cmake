@@ -1,5 +1,5 @@
 # - Find module for the ILMBase headers and libraries
-# 
+#
 # Input variables:
 #  ILMBase_ROOT
 #  ILMBase_USE_STATIC_LIBS
@@ -11,6 +11,7 @@
 #  ILMBASE_INCLUDE_DIRS
 #  ILMBASE_LIBRARY_DIRS
 #  ILMBASE_<lib>_LIBRARY
+#  ILMBASE_LIBRARIES
 #
 
 # Handle deprecated root hint
@@ -21,65 +22,70 @@ else()
     set(_ilmbase_ROOT_HINT ${ILMBase_ROOT})
 endif()
 
-find_path(_ilmbase_ROOT NAMES include/OpenEXR/IlmBaseConfig.h
-    HINTS ${_ilmbase_ROOT_HINT})
+find_path(ILMBASE_INCLUDE_DIRS NAMES OpenEXR/IlmBaseConfig.h
+    HINTS ${_ilmbase_ROOT_HINT}/include/)
 
-if(_ilmbase_ROOT)
-    set(ILMBASE_INCLUDE_DIRS ${_ilmbase_ROOT}/include ${_ilmbase_ROOT}/include/OpenEXR)
-    set(ILMBASE_LIBRARY_DIRS ${_ilmbase_ROOT}/lib)
+if(NOT _ilmbase_ROOT_HINT)
+    get_filename_component(_ilmbase_ROOT_HINT ${ILMBASE_INCLUDE_DIRS} DIRECTORY)
+endif()
 
-    file(READ "${ILMBASE_LIBRARY_DIRS}/pkgconfig/IlmBase.pc" _ilmbase_PC_CONTENTS)
-    string(REGEX REPLACE
-        ".*Version: ([1-9]+\\.[0-9]+\\.[0-9]+).*" "\\1"
-        ILMBASE_VERSION "${_ilmbase_PC_CONTENTS}")
+set(ILMBASE_INCLUDE_DIRS ${ILMBASE_INCLUDE_DIRS} ${ILMBASE_INCLUDE_DIRS}/OpenEXR)
 
-    # (Static lib search logic taken from FindBoost.cmake)
-    if(ILMBase_USE_STATIC_LIBS)
-        set(_ilmbase_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
-        if(WIN32)
-            set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-        else()
-            set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
-        endif()
-    endif()
-
-    # Determine which libraries must be found (default is all)
-    set(_ilmbase_VALID_COMPONENTS Half Iex IexMath IlmThread Imath)
-    if(ILMBase_FIND_COMPONENTS)
-        set(_ilmbase_REQUIRED_LIBS ${ILMBase_FIND_COMPONENTS})
+# (Static lib search logic taken from FindBoost.cmake)
+if(ILMBase_USE_STATIC_LIBS)
+    set(_ilmbase_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    if(WIN32)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
     else()
-        set(_ilmbase_REQUIRED_LIBS ${_ilmbase_VALID_COMPONENTS})
-    endif()
-
-    # Grab the library paths
-    set(_ilmbase_LIB_VARS)
-    foreach(_ilmbase_lib ${_ilmbase_REQUIRED_LIBS})
-        list(FIND _ilmbase_VALID_COMPONENTS ${_ilmbase_lib} _ilmbase_requested_index)
-        if(_ilmbase_requested_index EQUAL -1)
-            if(ILMBase_FIND_REQUIRED)
-                # If they "required" a lib we don't recognize, just abort here
-                message(FATAL_ERROR "Requested component ${_ilmbase_lib} is not a recognized ILMBase library")
-            else()
-                message(WARNING "Requested component '${_ilmbase_lib}' is not a recognized ILMBase library and will be skipped")
-            endif()
-        else()
-            find_library(ILMBASE_${_ilmbase_lib}_LIBRARY ${_ilmbase_lib}
-                HINTS ${ILMBASE_LIBRARY_DIRS}
-                DOC "ILMBase ${_ilmbase_lib} library path")
-            list(APPEND _ilmbase_LIB_VARS "ILMBASE_${_ilmbase_lib}_LIBRARY")
-        endif()
-    endforeach()
-
-    # Reset lib search suffix
-    if(ILMBase_USE_STATIC_LIBS)
-        set(CMAKE_FIND_LIBRARY_SUFFIXES ${_ilmbase_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
     endif()
 endif()
+
+# Determine which libraries must be found (default is all)
+set(_ilmbase_VALID_COMPONENTS Half Iex IexMath IlmThread Imath)
+if(ILMBase_FIND_COMPONENTS)
+    set(_ilmbase_REQUIRED_LIBS ${ILMBase_FIND_COMPONENTS})
+else()
+    set(_ilmbase_REQUIRED_LIBS ${_ilmbase_VALID_COMPONENTS})
+endif()
+
+# Grab the library paths
+set(_ilmbase_LIB_VARS)
+set(ILMBASE_LIBRARIES)
+foreach(_ilmbase_lib ${_ilmbase_REQUIRED_LIBS})
+    list(FIND _ilmbase_VALID_COMPONENTS ${_ilmbase_lib} _ilmbase_requested_index)
+    if(_ilmbase_requested_index EQUAL -1)
+        if(ILMBase_FIND_REQUIRED)
+            # If they "required" a lib we don't recognize, just abort here
+            message(FATAL_ERROR "Requested component ${_ilmbase_lib} is not a recognized ILMBase library")
+        else()
+            message(WARNING "Requested component '${_ilmbase_lib}' is not a recognized ILMBase library and will be skipped")
+        endif()
+    else()
+        find_library(ILMBASE_${_ilmbase_lib}_LIBRARY ${_ilmbase_lib}
+            HINTS ${_ilmbase_ROOT}/lib
+            DOC "ILMBase ${_ilmbase_lib} library path")
+        list(APPEND _ilmbase_LIB_VARS "ILMBASE_${_ilmbase_lib}_LIBRARY")
+        list(APPEND ILMBASE_LIBRARIES ${ILMBASE_${_ilmbase_lib}_LIBRARY})
+    endif()
+endforeach()
+
+# Reset lib search suffix
+if(ILMBase_USE_STATIC_LIBS)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ${_ilmbase_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
+endif()
+
+get_filename_component(ILMBASE_LIBRARY_DIRS ${ILMBASE_Half_LIBRARY} DIRECTORY)
+
+file(READ "${ILMBASE_LIBRARY_DIRS}/pkgconfig/IlmBase.pc" _ilmbase_PC_CONTENTS)
+string(REGEX REPLACE
+    ".*Version: ([1-9]+\\.[0-9]+\\.[0-9]+).*" "\\1"
+    ILMBASE_VERSION "${_ilmbase_PC_CONTENTS}")
 
 # Finalize package search
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ILMBase
-    REQUIRED_VARS ${_ilmbase_LIB_VARS} ILMBASE_INCLUDE_DIRS ILMBASE_LIBRARY_DIRS
+    REQUIRED_VARS ${_ilmbase_LIB_VARS} ILMBASE_INCLUDE_DIRS ILMBASE_LIBRARY_DIRS ILMBASE_LIBRARIES
     VERSION_VAR ILMBASE_VERSION)
 
 
