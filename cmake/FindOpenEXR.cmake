@@ -1,202 +1,81 @@
-# Copyright 2008-2014 Larry Gritz et al. All Rights Reserved.
+# - Find module for the OpenEXR headers and libraries
 #
-# Module to find OpenEXR.
+# Input variables:
+#  OpenEXR_ROOT
+#  OpenEXR_USE_STATIC_LIBS
 #
-# This module will first look into the directories defined by the variables:
-#   - OPENEXR_HOME, OPENEXR_VERSION, OPENEXR_LIB_AREA
+# Output variables:
+#  OPENEXR_FOUND
+#  OPENEXR_INCLUDE_DIRS
+#  OPENEXR_<lib>_LIBRARY
+#  OPENEXR_LIBRARIES
 #
-# It also supports non-standard names for the library components.
-#
-# To use a custom OpenEXR
-#   - Set the variable OPENEXR_CUSTOM to True
-#   - Set the variable OPENEXR_CUSTOM_LIBRARY to the name of the library to
-#     use, e.g. "SpiIlmImf"
-#
-# This module defines the following variables:
-#
-# OPENEXR_INCLUDE_DIR - where to find ImfRgbaFile.h, OpenEXRConfig, etc.
-# OPENEXR_LIBRARIES   - list of libraries to link against when using OpenEXR.
-#                       This list does NOT include the IlmBase libraries.
-#                       These are defined by the FindIlmBase module.
-# OPENEXR_FOUND       - True if OpenEXR was found.
 
-# Other standarnd issue macros
-include (FindPackageHandleStandardArgs)
-include (FindPackageMessage)
-
-
-# Macro to assemble a helper state variable
-macro (SET_STATE_VAR varname)
-  set (tmp_lst
-    ${OPENEXR_CUSTOM} | ${OPENEXR_CUSTOM_LIBRARY} |
-    ${OPENEXR_HOME} | ${OPENEXR_VERSION} | ${OPENEXR_LIB_AREA}
-  )
-  set (${varname} "${tmp_lst}")
-  unset (tmp_lst)
-endmacro ()
-
-# To enforce that find_* functions do not use inadvertently existing versions
-if (OPENEXR_CUSTOM)
-  set (OPENEXR_FIND_OPTIONS "NO_DEFAULT_PATH")
-endif ()
-
-# Macro to search for an include directory
-macro (PREFIX_FIND_INCLUDE_DIR prefix includefile libpath_var)
-  string (TOUPPER ${prefix}_INCLUDE_DIR tmp_varname)
-  find_path(${tmp_varname} ${includefile}
-    HINTS ${${libpath_var}}
-    PATH_SUFFIXES include
-    ${OPENEXR_FIND_OPTIONS}
-  )
-  if (${tmp_varname})
-    mark_as_advanced (${tmp_varname})
-  endif ()
-  unset (tmp_varname)
-endmacro ()
-
-
-# Macro to search for the given library and adds the cached
-# variable names to the specified list
-macro (PREFIX_FIND_LIB prefix libname libpath_var liblist_var cachelist_var)
-  string (TOUPPER ${prefix}_${libname} tmp_prefix)
-  find_library(${tmp_prefix}_LIBRARY_RELEASE
-    NAMES ${libname}
-    HINTS ${${libpath_var}}
-    PATH_SUFFIXES lib
-    ${OPENEXR_FIND_OPTIONS}
-  )
-  find_library(${tmp_prefix}_LIBRARY_DEBUG
-    NAMES ${libname}d ${libname}_d ${libname}debug ${libname}_debug
-    HINTS ${${libpath_var}}
-    PATH_SUFFIXES lib
-    ${OPENEXR_FIND_OPTIONS}
-  )
-  # Properly define ${tmp_prefix}_LIBRARY (cached) and ${tmp_prefix}_LIBRARIES
-  select_library_configurations (${tmp_prefix})
-  list (APPEND ${liblist_var} ${tmp_prefix}_LIBRARIES)
-
-  # Add to the list of variables which should be reset
-  list (APPEND ${cachelist_var}
-    ${tmp_prefix}_LIBRARY
-    ${tmp_prefix}_LIBRARY_RELEASE
-    ${tmp_prefix}_LIBRARY_DEBUG)
-  mark_as_advanced (
-    ${tmp_prefix}_LIBRARY
-    ${tmp_prefix}_LIBRARY_RELEASE
-    ${tmp_prefix}_LIBRARY_DEBUG)
-  unset (tmp_prefix)
-endmacro ()
-
-
-# Encode the current state of the external variables into a string
-SET_STATE_VAR (OPENEXR_CURRENT_STATE)
-
-# If the state has changed, clear the cached variables
-if (OPENEXR_CACHED_STATE AND
-    NOT OPENEXR_CACHED_STATE STREQUAL OPENEXR_CURRENT_STATE)
-  foreach (libvar ${OPENEXR_CACHED_VARS})
-    unset (${libvar} CACHE)
-  endforeach ()
-endif ()
-
-if (OPENEXR_CUSTOM)
-  if (NOT OPENEXR_CUSTOM_LIBRARY)
-    message (FATAL_ERROR "Custom OpenEXR library requested but OPENEXR_CUSTOM_LIBRARY is not set.")
-  endif()
-  set (OpenEXR_Library ${OPENEXR_CUSTOM_LIBRARY})
-else ()
-  set (OpenEXR_Library IlmImf)
-endif ()
-
-# Generic search paths
-set (OpenEXR_generic_include_paths
-  /usr/include
-  /usr/local/include
-  /sw/include
-  /opt/local/include)
-set (OpenEXR_generic_library_paths
-  /usr/lib
-  /usr/local/lib
-  /sw/lib
-  /opt/local/lib)
-
-# Search paths for the OpenEXR files
-if (OPENEXR_HOME)
-  set (OpenEXR_library_paths
-    ${OPENEXR_HOME}/lib
-    ${OPENEXR_HOME}/lib64)
-  if (OPENEXR_VERSION)
-    set (OpenEXR_include_paths
-      ${OPENEXR_HOME}/openexr-${OPENEXR_VERSION}/include
-      ${OPENEXR_HOME}/include/openexr-${OPENEXR_VERSION})
-    list (APPEND OpenEXR_library_paths
-      ${OPENEXR_HOME}/openexr-${OPENEXR_VERSION}/lib
-      ${OPENEXR_HOME}/lib/openexr-${OPENEXR_VERSION})
-  endif()
-  list (APPEND OpenEXR_include_paths ${OPENEXR_HOME}/include)
-  if (OPENEXR_LIB_AREA)
-    list (INSERT OpenEXR_library_paths 2 ${OPENEXR_LIB_AREA})
-  endif ()
-endif ()
-if (ILMBASE_HOME AND OPENEXR_VERSION)
-  list (APPEND OpenEXR_include_paths
-    ${ILMBASE_HOME}/include/openexr-${OPENEXR_VERSION})
+# Handle deprecated root hint
+if(OPENEXR_ROOT)
+    message(WARNING "OPENEXR_ROOT variable is deprecated. Use OpenEXR_ROOT instead.")
+    set(_openexr_ROOT_HINT ${OPENEXR_ROOT})
+elseif(OpenEXR_ROOT)
+    set(_openexr_ROOT_HINT ${OpenEXR_ROOT})
+elseif(NOT $ENV{OPENEXR_ROOT} STREQUAL "")
+    set(_openexr_ROOT_HINT $ENV{OPENEXR_ROOT})
 endif()
-list (APPEND OpenEXR_include_paths ${OpenEXR_generic_include_paths})
-list (APPEND OpenEXR_library_paths ${OpenEXR_generic_library_paths})
 
-# Locate the header files
-PREFIX_FIND_INCLUDE_DIR (OpenEXR
-  OpenEXR/ImfArray.h OpenEXR_include_paths)
+find_path(OPENEXR_INCLUDE_DIRS NAMES OpenEXR/ImfArray.h
+    HINTS ${_openexr_ROOT_HINT}/include/)
 
-# If the headers were found, add its parent to the list of lib directories
-if (OPENEXR_INCLUDE_DIR)
-  get_filename_component (tmp_extra_dir "${OPENEXR_INCLUDE_DIR}/../" ABSOLUTE)
-  list (APPEND OpenEXR_library_paths ${tmp_extra_dir})
-  unset (tmp_extra_dir)
-endif ()
+if(NOT _openexr_ROOT_HINT)
+    get_filename_component(_openexr_ROOT_HINT ${OPENEXR_INCLUDE_DIRS} DIRECTORY)
+endif()
 
-# Locate the OpenEXR library
-set (OpenEXR_libvars "")
-set (OpenEXR_cachevars "")
-PREFIX_FIND_LIB (OpenEXR ${OpenEXR_Library}
-  OpenEXR_library_paths OpenEXR_libvars OpenEXR_cachevars)
+# (Static lib search logic taken from FindBoost.cmake)
+if(OpenEXR_USE_STATIC_LIBS)
+    set(_openexr_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    if(WIN32)
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    else()
+        set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+    endif()
+endif()
 
-# Create the list of variables that might need to be cleared
-set (OPENEXR_CACHED_VARS
-  OPENEXR_INCLUDE_DIR ${OpenEXR_cachevars}
-  CACHE INTERNAL "Variables set by FindOpenEXR.cmake" FORCE)
+# Determine which libraries must be found (default is all)
+set(_openexr_VALID_COMPONENTS
+    IlmImf)
 
-# Store the current state so that variables might be cleared if required
-set (OPENEXR_CACHED_STATE ${OPENEXR_CURRENT_STATE}
-  CACHE INTERNAL "State last seen by FindOpenEXR.cmake" FORCE)
+if(OpenEXR_FIND_COMPONENTS)
+    set(_openexr_REQUIRED_LIBS ${OpenEXR_FIND_COMPONENTS})
+else()
+    set(_openexr_REQUIRED_LIBS ${_openexr_VALID_COMPONENTS})
+endif()
 
-# Always link explicitly with zlib
-set (OPENEXR_ZLIB ${ZLIB_LIBRARIES})
+# Grab the library paths
+set(_openexr_LIB_VARS)
+set(OPENEXR_LIBRARIES)
+foreach(_openexr_lib ${_openexr_REQUIRED_LIBS})
+    list(FIND _openexr_VALID_COMPONENTS ${_openexr_lib} _openexr_requested_index)
+    if(_openexr_requested_index EQUAL -1)
+        if(OpenEXR_FIND_REQUIRED)
+            # If they "required" a lib we don't recognize, just abort here
+            message(FATAL_ERROR "Requested component ${_openexr_lib} is not a recognized OpenEXR library")
+        else()
+            message(WARNING "Requested component '${_openexr_lib}' is not a recognized OpenEXR library and will be skipped")
+        endif()
+    else()
+        find_library(OPENEXR_${_openexr_lib}_LIBRARY ${_openexr_lib}
+            ${_openexr_ROOT_HINT}/lib
+            ${_openexr_ROOT_HINT}/lib64
+            DOC "OpenEXR ${_openexr_lib} library path")
+        list(APPEND _openexr_LIB_VARS "OPENEXR_${_openexr_lib}_LIBRARY")
+        list(APPEND OPENEXR_LIBRARIES ${OPENEXR_${_openexr_lib}_LIBRARY})
+    endif()
+endforeach()
 
-# Use the standard function to handle OPENEXR_FOUND
-FIND_PACKAGE_HANDLE_STANDARD_ARGS (OpenEXR DEFAULT_MSG
-  OPENEXR_INCLUDE_DIR ${OpenEXR_libvars})
+# Reset lib search suffix
+if(OpenEXR_USE_STATIC_LIBS)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ${_openexr_ORIG_CMAKE_FIND_LIBRARY_SUFFIXES})
+endif()
 
-if (OPENEXR_FOUND)
-  set (OPENEXR_LIBRARIES "")
-  foreach (tmplib ${OpenEXR_libvars})
-    list (APPEND OPENEXR_LIBRARIES ${${tmplib}})
-  endforeach ()
-  list (APPEND OPENEXR_LIBRARIES ${ZLIB_LIBRARIES})
-  if (VERBOSE)
-    FIND_PACKAGE_MESSAGE (OPENEXR
-      "Found OpenEXR: ${OPENEXR_LIBRARIES}"
-      "[${OPENEXR_INCLUDE_DIR}][${OPENEXR_LIBRARIES}][${OPENEXR_CURRENT_STATE}]"
-      )
-  endif ()
-endif ()
-
-# Unset the helper variables to avoid pollution
-unset (OPENEXR_CURRENT_STATE)
-unset (OpenEXR_include_paths)
-unset (OpenEXR_library_paths)
-unset (OpenEXR_generic_include_paths)
-unset (OpenEXR_generic_library_paths)
-unset (OpenEXR_libvars)
-unset (OpenEXR_cachevars)
+# Finalize package search
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(OpenEXR
+    REQUIRED_VARS ${_openexr_LIB_VARS} OPENEXR_INCLUDE_DIRS OPENEXR_LIBRARIES)
