@@ -63,7 +63,7 @@ foreach(_ilmbase_lib ${_ilmbase_REQUIRED_LIBS})
         endif()
     else()
         find_library(ILMBASE_${_ilmbase_lib}_LIBRARY ${_ilmbase_lib}
-            HINTS ${_ilmbase_ROOT}/lib
+            HINTS ${_ilmbase_ROOT_HINT}/lib
             DOC "ILMBase ${_ilmbase_lib} library path")
         list(APPEND _ilmbase_LIB_VARS "ILMBASE_${_ilmbase_lib}_LIBRARY")
         list(APPEND ILMBASE_LIBRARIES ${ILMBASE_${_ilmbase_lib}_LIBRARY})
