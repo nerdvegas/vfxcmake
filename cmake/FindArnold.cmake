@@ -31,7 +31,7 @@
 #
 #
 # Naming convention:
-#  Local variables of the form foo
+#  Local variables of the form _arnold_foo
 #  Input variables from CMake of the form ARNOLD_FOO
 #  Output variables of the form ARNOLD_FOO
 #
@@ -79,76 +79,77 @@ set(ARNOLD_PYTHON_DIRS ${ARNOLD_PYTHON_DIR})
 set(ARNOLD_OSL_HEADER_DIRS ${ARNOLD_OSL_HEADER_DIR})
 
 if(ARNOLD_INCLUDE_DIR AND EXISTS "${ARNOLD_INCLUDE_DIR}/ai_version.h")
-    foreach(comp ARCH_NUM MAJOR_NUM MINOR_NUM FIX)
+    foreach(_arnold_comp ARCH_NUM MAJOR_NUM MINOR_NUM FIX)
         file(STRINGS
             ${ARNOLD_INCLUDE_DIR}/ai_version.h
-            TMP
-            REGEX "#define AI_VERSION_${comp} .*$")
-        string(REGEX MATCHALL "[0-9]+" ARNOLD_VERSION_${comp} ${TMP})
+            _arnold_tmp
+            REGEX "#define AI_VERSION_${_arnold_comp} .*$")
+        string(REGEX MATCHALL "[0-9]+" ARNOLD_VERSION_${_arnold_comp} ${_arnold_tmp})
     endforeach()
     set(ARNOLD_VERSION ${ARNOLD_VERSION_ARCH_NUM}.${ARNOLD_VERSION_MAJOR_NUM}.${ARNOLD_VERSION_MINOR_NUM}.${ARNOLD_VERSION_FIX})
 endif()
 
 function(arnold_compile_osl)
-    set(options QUIET VERBOSE INSTALL INSTALL_SOURCES)
-    set(oneValueArgs OSLC_FLAGS DESTINATION DESTINATION_SOURCES)
-    set(multiValueArgs INCLUDES SOURCES)
-    cmake_parse_arguments(arnold_compile_osl "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    set(_arnold_options QUIET VERBOSE INSTALL INSTALL_SOURCES)
+    set(_arnold_one_value_args OSLC_FLAGS DESTINATION DESTINATION_SOURCES)
+    set(_arnold_multi_value_args INCLUDES SOURCES)
+    cmake_parse_arguments(arnold_compile_osl "${_arnold_options}" "${_arnold_one_value_args}" "${_arnold_multi_value_args}" ${ARGN})
 
     if (CMAKE_BUILD_TYPE MATCHES Debug)
-        set(OSLC_OPT_FLAGS "-d -O0")
+        set(_arnold_oslc_opt_flags "-d -O0")
     elseif (CMAKE_BUILD_TYPE MATCHES Release)
-        set(OSLC_OPT_FLAGS "-O2")
+        set(_arnold_oslc_opt_flags "-O2")
     elseif (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
-        set(OSLC_OPT_FLAGS "-d -O2")
+        set(_arnold_oslc_opt_flags "-d -O2")
     else ()
-        set(OSLC_OPT_FLAGS "-O2")
+        set(_arnold_oslc_opt_flags "-O2")
     endif ()
 
-    set(OSLC_FLAGS "-I${ARNOLD_OSL_HEADER_DIR}")
-    set(OSLC_FLAGS "${OSLC_FLAGS} ${arnold_compile_osl_OSLC_FLAGS}")
+    set(_arnold_oslc_flags "-I${ARNOLD_OSL_HEADER_DIR}")
+    set(_arnold_oslc_flags "${_arnold_oslc_flags} ${arnold_compile_osl_OSLC_FLAGS}")
     if (${arnold_compile_osl_QUIET})
-        set(OSLC_FLAGS "${OSLC_FLAGS} -q")
+        set(_arnold_oslc_flags "${_arnold_oslc_flags} -q")
     endif ()
 
     if (${arnold_compile_osl_VERBOSE})
-        set(OSLC_FLAGS "${OSLC_FLAGS} -v")
+        set(_arnold_oslc_flags "${_arnold_oslc_flags} -v")
     endif ()
 
-    foreach (include ${arnold_compile_osl_INCLUDES})
-        set(OSLC_FLAGS "${OSLC_FLAGS} -I${include}")
+    foreach (_arnold_include ${arnold_compile_osl_INCLUDES})
+        set(_arnold_oslc_flags "${_arnold_oslc_flags} -I${_arnold_include}")
     endforeach ()
 
-    set(OSLC_FLAGS "${OSLC_FLAGS} ${OSLC_OPT_FLAGS}")
+    set(_arnold_oslc_flags "${_arnold_oslc_flags} ${_arnold_oslc_opt_flags}")
     if (${arnold_compile_osl_VERBOSE})
-        message (STATUS "OSL - Arnold compile options : ${OSLC_FLAGS}")
+        message (STATUS "OSL - Arnold compile options : ${_arnold_oslc_flags}")
     endif ()
 
-    foreach (source ${arnold_compile_osl_SOURCES})
+    foreach (_arnold_source ${arnold_compile_osl_SOURCES})
         # unique name for each target
-        string(REPLACE ".osl" ".oso" target_name ${source})
-        string(REPLACE "/" "_" target_name ${target_name})
-        string(REPLACE "\\" "_" target_name ${target_name})
-        set(target_path "${CMAKE_CURRENT_BINARY_DIR}/${target_name}")
-        string(REPLACE "." "_" target_name ${target_name})
-        set(cmd_args "${OSLC_FLAGS} -o ${target_path} ${source}")
-        separate_arguments(cmd_args)        
-        add_custom_command(OUTPUT ${target_path}
-                           COMMAND ${ARNOLD_OSLC} ${cmd_args}
+        string(REPLACE ".osl" ".oso" _arnold_target_name ${_arnold_source})
+        string(REPLACE "/" "_" _arnold_target_name ${_arnold_target_name})
+        string(REPLACE "\\" "_" _arnold_target_name ${_arnold_target_name})
+        string(REPLACE ":" "_" _arnold_target_name ${_arnold_target_name})
+        set(_arnold_target_path "${CMAKE_CURRENT_BINARY_DIR}/${_arnold_target_name}")
+        string(REPLACE "." "_" _arnold_target_name ${_arnold_target_name})
+        set(_arnold_cmd_args "${_arnold_oslc_flags} -o ${_arnold_target_path} ${_arnold_source}")
+        separate_arguments(_arnold_cmd_args)        
+        add_custom_command(OUTPUT ${_arnold_target_path}
+                           COMMAND ${ARNOLD_OSLC} ${_arnold_cmd_args}
                            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        add_custom_target(${target_name} ALL
-                          DEPENDS ${target_path}
-                          SOURCES ${source})
+        add_custom_target(${_arnold_target_name} ALL
+                          DEPENDS ${_arnold_target_path}
+                          SOURCES ${_arnold_source})
         if (${arnold_compile_osl_INSTALL})
-            get_filename_component(install_name ${source} NAME)
+            get_filename_component(_arnold_install_name ${_arnold_source} NAME)
             # rename the unique files
-            string(REPLACE ".osl" ".oso" install_name ${install_name})
-            install(FILES ${target_path}
+            string(REPLACE ".osl" ".oso" _arnold_install_name ${_arnold_install_name})
+            install(FILES ${_arnold_target_path}
                     DESTINATION ${arnold_compile_osl_DESTINATION}
-                    RENAME ${install_name})
+                    RENAME ${_arnold_install_name})
         endif ()
         if (${arnold_compile_osl_INSTALL_SOURCES})
-            install(FILES ${source} DESTINATION ${arnold_compile_osl_DESTINATION_SOURCES})
+            install(FILES ${_arnold_source} DESTINATION ${arnold_compile_osl_DESTINATION_SOURCES})
         endif ()
     endforeach ()
 endfunction()
