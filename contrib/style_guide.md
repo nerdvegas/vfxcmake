@@ -17,7 +17,7 @@ Spacing
 - Nested blocks are each indented 4 spaces, in line with Python's PEP-8 style
 guide.
 
-```
+```cmake
 if(APPLE)
     message(STATUS "I think this is a Mac")
 elseif(WIN32)
@@ -30,7 +30,7 @@ endif()
 - Line splitting for command flags and arguments is left to the discretion of
 the module author. Hanging indents should be to the next block level.
 
-```
+```cmake
 find_path(MAYA_INCLUDE_DIRS maya/MFn.h
     HINTS ${MAYA_LOCATION}
     PATH_SUFFIXES
@@ -42,7 +42,7 @@ find_path(MAYA_INCLUDE_DIRS maya/MFn.h
 - Leading and trailing spaces should be omitted from commands and parenthesized
 expressions.
 
-```
+```cmake
 foreach(version ${_maya_KNOWN_VERSIONS})
     if(NOT "${version}" VERSION_LESS "${Maya_FIND_VERSION}")
         list(APPEND _maya_TEST_VERSIONS "${version}")
