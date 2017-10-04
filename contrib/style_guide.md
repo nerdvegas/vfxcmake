@@ -64,14 +64,14 @@ etc. are upper-case (e.g. `STREQUAL`, `APPEND`).
 
 Variables
 ---------
-- Names of variables used as input to the module should be prefixed with the
+- Input variables should be prefixed with the
 target name cased to match the package name as it is represented in the "Find"
 module's filename (e.g. `Maya_FIND_VERSION`).
-- Names of variables that are meant for external use shoudl be prefixed with
+- Output variables should be prefixed with
 the target name in **upper-case** (e.g. `MAYA_FOUND`, `MAYA_LIBRARY_DIRS`).
-- Names of internal module variables should begin with an underscore and some
+- Private module variables should begin with an underscore and some
 variation the target name, typically in **lower-case** (e.g. `_maya_DEFINES`).
-
+- Path output variable should generally be plural (e.g. `MAYA_INCLUDE_DIRS`)
 
 Functions and Macros
 --------------------
