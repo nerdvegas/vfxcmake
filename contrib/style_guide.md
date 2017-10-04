@@ -84,3 +84,24 @@ Flow Control
 - Flow control termination commmands are invoked without the expressions from
 the matching start commands (e.g. `endif()`, `endforeach()`).
 - Flow control start/end commands should be at the same indent level.
+
+Documentation
+-------------
+
+Each `Find*.cmake` file should have a header describing the input and output variables, macros, and environment variables that influence discovery.
+
+```cmake
+# Input variables:
+#  Alembic_ROOT
+#  Alembic_USE_STATIC_LIBS
+#
+# Input environment variables:
+#  ALEMBIC_ROOT
+#
+# Output variables:
+#  ALEMBIC_FOUND
+#  ALEMBIC_INCLUDE_DIRS
+#  ALEMBIC_<lib>_LIBRARY
+#  ALEMBIC_LIBRARIES
+#
+```
