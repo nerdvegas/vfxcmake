@@ -1,5 +1,6 @@
 # - Arnold finder module
-# This module searches for a valid Arnold installation.
+# This module searches for a valid Arnold installation, by looking at
+# the ARNOLD_HOME environment variable.
 #
 # Variables that will be defined:
 # ARNOLD_FOUND              Defined if a Arnold installation has been detected
@@ -95,36 +96,36 @@ function(arnold_compile_osl)
     set(_arnold_multi_value_args INCLUDES SOURCES)
     cmake_parse_arguments(arnold_compile_osl "${_arnold_options}" "${_arnold_one_value_args}" "${_arnold_multi_value_args}" ${ARGN})
 
-    if (CMAKE_BUILD_TYPE MATCHES Debug)
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
         set(_arnold_oslc_opt_flags "-d -O0")
-    elseif (CMAKE_BUILD_TYPE MATCHES Release)
+    elseif(CMAKE_BUILD_TYPE MATCHES Release)
         set(_arnold_oslc_opt_flags "-O2")
-    elseif (CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+    elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
         set(_arnold_oslc_opt_flags "-d -O2")
-    else ()
+    else()
         set(_arnold_oslc_opt_flags "-O2")
-    endif ()
+    endif()
 
     set(_arnold_oslc_flags "-I${ARNOLD_OSL_HEADER_DIR}")
     set(_arnold_oslc_flags "${_arnold_oslc_flags} ${arnold_compile_osl_OSLC_FLAGS}")
-    if (${arnold_compile_osl_QUIET})
+    if(${arnold_compile_osl_QUIET})
         set(_arnold_oslc_flags "${_arnold_oslc_flags} -q")
-    endif ()
+    endif()
 
-    if (${arnold_compile_osl_VERBOSE})
+    if(${arnold_compile_osl_VERBOSE})
         set(_arnold_oslc_flags "${_arnold_oslc_flags} -v")
-    endif ()
+    endif()
 
-    foreach (_arnold_include ${arnold_compile_osl_INCLUDES})
+    foreach(_arnold_include ${arnold_compile_osl_INCLUDES})
         set(_arnold_oslc_flags "${_arnold_oslc_flags} -I${_arnold_include}")
-    endforeach ()
+    endforeach()
 
     set(_arnold_oslc_flags "${_arnold_oslc_flags} ${_arnold_oslc_opt_flags}")
-    if (${arnold_compile_osl_VERBOSE})
+    if(${arnold_compile_osl_VERBOSE})
         message (STATUS "OSL - Arnold compile options : ${_arnold_oslc_flags}")
-    endif ()
+    endif()
 
-    foreach (_arnold_source ${arnold_compile_osl_SOURCES})
+    foreach(_arnold_source ${arnold_compile_osl_SOURCES})
         # unique name for each target
         string(REPLACE ".osl" ".oso" _arnold_target_name ${_arnold_source})
         string(REPLACE "/" "_" _arnold_target_name ${_arnold_target_name})
@@ -140,19 +141,19 @@ function(arnold_compile_osl)
         add_custom_target(${_arnold_target_name} ALL
                           DEPENDS ${_arnold_target_path}
                           SOURCES ${_arnold_source})
-        if (${arnold_compile_osl_INSTALL})
+        if(${arnold_compile_osl_INSTALL})
             get_filename_component(_arnold_install_name ${_arnold_source} NAME)
             # rename the unique files
             string(REPLACE ".osl" ".oso" _arnold_install_name ${_arnold_install_name})
             install(FILES ${_arnold_target_path}
                     DESTINATION ${arnold_compile_osl_DESTINATION}
                     RENAME ${_arnold_install_name})
-        endif ()
-        if (${arnold_compile_osl_INSTALL_SOURCES})
+        endif()
+        if(${arnold_compile_osl_INSTALL_SOURCES})
             install(FILES ${_arnold_source} DESTINATION ${arnold_compile_osl_DESTINATION_SOURCES})
-        endif ()
-    endforeach ()
-endfunction()
+        endif()
+    endforeach()
+endfunction(arnold_compile_osl)
 
 message(STATUS "Arnold library: ${ARNOLD_LIBRARY}")
 message(STATUS "Arnold headers: ${ARNOLD_INCLUDE_DIR}")
@@ -160,7 +161,7 @@ message(STATUS "Arnold version: ${ARNOLD_VERSION}")
 
 include(FindPackageHandleStandardArgs)
 
-if (${ARNOLD_VERSION_ARCH_NUM} VERSION_GREATER "4")
+if(${ARNOLD_VERSION_ARCH_NUM} VERSION_GREATER "4")
     find_package_handle_standard_args(Arnold
         REQUIRED_VARS
         ARNOLD_LIBRARY
@@ -169,11 +170,11 @@ if (${ARNOLD_VERSION_ARCH_NUM} VERSION_GREATER "4")
         ARNOLD_OSL_HEADER_DIR
         VERSION_VAR
         ARNOLD_VERSION)
-else ()
+else()
     find_package_handle_standard_args(Arnold
         REQUIRED_VARS
         ARNOLD_LIBRARY
         ARNOLD_INCLUDE_DIR
         VERSION_VAR
         ARNOLD_VERSION)
-endif ()
+endif()
