@@ -1,6 +1,7 @@
 # - Arnold finder module
 # This module searches for a valid Arnold installation, by looking at
-# the ARNOLD_HOME environment variable.
+# the Arnold_HOME environment variable. For backward compatibility reasons
+# we also support ARNOLD_HOME.
 #
 # Variables that will be defined:
 # ARNOLD_FOUND              Defined if a Arnold installation has been detected
@@ -39,39 +40,87 @@
 
 find_library(ARNOLD_LIBRARY
     NAMES ai
-    PATHS $ENV{ARNOLD_HOME}/bin
+    HINTS
+        "${Arnold_HOME}"
+        "$ENV{Arnold_HOME}"
+        "${ARNOLD_HOME}"
+        "$ENV{ARNOLD_HOME}"
+    PATH_SUFFIXES
+        bin/
     DOC "Arnold library")
 
 find_file(ARNOLD_KICK
     names kick
-    PATHS $ENV{ARNOLD_HOME}/bin
+    HINTS
+        "${Arnold_HOME}"
+        "$ENV{Arnold_HOME}"
+        "${ARNOLD_HOME}"
+        "$ENV{ARNOLD_HOME}"
+    PATH_SUFFIXES
+        bin/
     DOC "Arnold kick executable")
 
 find_file(ARNOLD_PYKICK
     names pykick
-    PATHS $ENV{ARNOLD_HOME}/python/pykikc
+    HINTS
+        "${Arnold_HOME}"
+        "$ENV{Arnold_HOME}"
+        "${ARNOLD_HOME}"
+        "$ENV{ARNOLD_HOME}"
+    PATH_SUFFIXES
+        bin/
     DOC "Arnold pykick executable")
 
 find_file(ARNOLD_MAKETX
     names maketx
-    PATHS $ENV{ARNOLD_HOME}/bin
+    HINTS
+        "${Arnold_HOME}"
+        "$ENV{Arnold_HOME}"
+        "${ARNOLD_HOME}"
+        "$ENV{ARNOLD_HOME}"
+    PATH_SUFFIXES
+        bin/
     DOC "Arnold maketx executable")
 
 find_path(ARNOLD_INCLUDE_DIR ai.h
-    PATHS $ENV{ARNOLD_HOME}/include
+    HINTS
+        "${Arnold_HOME}"
+        "$ENV{Arnold_HOME}"
+        "${ARNOLD_HOME}"
+        "$ENV{ARNOLD_HOME}"
+    PATH_SUFFIXES
+        include/
     DOC "Arnold include path")
 
 find_path(ARNOLD_PYTHON_DIR arnold/ai_allocate.py
-    PATHS $ENV{ARNOLD_HOME}/python
+    HINTS
+        "${Arnold_HOME}"
+        "$ENV{Arnold_HOME}"
+        "${ARNOLD_HOME}"
+        "$ENV{ARNOLD_HOME}"
+    PATH_SUFFIXES
+        python/
     DOC "Arnold python bindings path")
 
 find_file(ARNOLD_OSLC
     names oslc
-    PATHS $ENV{ARNOLD_HOME}/bin
+    HINTS
+        "${Arnold_HOME}"
+        "$ENV{Arnold_HOME}"
+        "${ARNOLD_HOME}"
+        "$ENV{ARNOLD_HOME}"
+    PATH_SUFFIXES
+        bin/
     DOC "Arnold flavoured oslc")
 
 find_path(ARNOLD_OSL_HEADER_DIR stdosl.h
-    PATHS $ENV{ARNOLD_HOME}/osl/include
+    HINTS
+        "${Arnold_HOME}"
+        "$ENV{Arnold_HOME}"
+        "${ARNOLD_HOME}"
+        "$ENV{ARNOLD_HOME}"
+    PATH_SUFFIXES
+        osl/include/
     DOC "Arnold flavoured osl headers")
 
 set(ARNOLD_LIBRARIES ${ARNOLD_LIBRARY})
